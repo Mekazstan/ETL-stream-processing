@@ -1,0 +1,2 @@
+# Realtime (Scalable) Stream Processing & Orchestration
+An end to end Data Engineering project using technologies such as Apache Kafka, Apache Spark, cassandra DB all orchestrated with Apache Airflow & containerized with Docker
