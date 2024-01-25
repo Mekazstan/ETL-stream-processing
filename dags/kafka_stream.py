@@ -47,9 +47,11 @@ def format_data(response):
     return data
     
 
-# Function to stream the data
+# Function to stream the data & produce data
 def stream_data():
     import json
+    
+    
     response = get_data()
     response = format_data(response)
     print(json.dumps(response, indent=3))
