@@ -61,7 +61,11 @@ def stream_data():
     # print(json.dumps(response, indent=3))
     
     # Initializing the Producer class
+    # [Using bootstrap_servers=['localhost:9092'] because Kafka broker is running on the same machine where the Docker container is located.]
     producer = KafkaProducer(bootstrap_servers=['localhost:9092'], max_block_ms=5000)
+    # [Using bootstrap_servers=['broker:9092'] producer finds the Kafka broker running on the same Docker network.]
+    # producer = KafkaProducer(bootstrap_servers=['broker:9092'], max_block_ms=5000)
+    
     producer.send('users_created', json.dumps(response).encode('utf-8'))
     
     
