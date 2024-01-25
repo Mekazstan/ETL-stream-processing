@@ -1,6 +1,6 @@
 import datetime as dt
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python import PythonOperator
 
 # DAG Arguments        
 default_args = {
@@ -58,7 +58,7 @@ def stream_data():
 
 with DAG('user_automation',
     default_args=default_args,
-    schedule_interval='@daily',
+    schedule='@daily',
     catchup=False
 ) as dag:
     
