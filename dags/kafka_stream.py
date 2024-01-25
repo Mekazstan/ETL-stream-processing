@@ -50,11 +50,19 @@ def format_data(response):
 # Function to stream the data & produce data
 def stream_data():
     import json
+    from kafka import KafkaProducer
+    import time
     
-    
+    # Getting the data
     response = get_data()
+    
+    # Formatting the response
     response = format_data(response)
-    print(json.dumps(response, indent=3))
+    # print(json.dumps(response, indent=3))
+    
+    # Initializing the Producer class
+    producer = KafkaProducer(bootstrap_servers=['localhost:9092'], max_block_ms=5000)
+    producer.send('users_created', json.dumps(response).encode('utf-8'))
     
     
 
