@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.4.0
     hostname: zookeeper
     container_name: zookeeper
     ports:
@@ -98,49 +98,49 @@ services:
     networks:
       - dev_meka
 
-  webserver:
-    image: apache/airflow:2.6.0-python3.9
-    command: webserver
-    entrypoint: ['/opt/airflow/script/entrypoint.sh']
-    depends_on:
-      - postgres
-    ports:
-      - "8080:8080"
-    environment:
-      - LOAD_EX=n
-      - EXECUTOR=Sequential
-      - AIRFLOW_DATABASE_SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-      - AIRFLOW_WEBSERVER_SECRET_KEY=this_is_a_very_secured_key
-    logging:
-      options:
-        max-size: 10m
-        max-file: "3"
-    # Setup DAGS path & path to script for initializing the webserver
-    volumes:
-      - ./dags:'opt/airflow/dags'
-      - ./script/entrypoint.sh:/opt/airflow/script/entrypoint.sh
-    healthcheck:
-      test: ['CMD-SHELL', "[ -f /opt/airflow/airflow-webserver.pid ]"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
-    networks:
-      - dev_meka
+  # webserver:
+  #   image: apache/airflow:2.6.0-python3.9
+  #   command: webserver
+  #   entrypoint: ['/opt/airflow/script/entrypoint.sh']
+  #   depends_on:
+  #     - postgres
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - LOAD_EX=n
+  #     - EXECUTOR=Sequential
+  #     - AIRFLOW_DATABASE_SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+  #     - AIRFLOW_WEBSERVER_SECRET_KEY=this_is_a_very_secured_key
+  #   logging:
+  #     options:
+  #       max-size: 10m
+  #       max-file: "3"
+  #   # Setup DAGS path & path to script for initializing the webserver
+  #   volumes:
+  #     - ./dags:'opt/airflow/dags'
+  #     - ./script/entrypoint.sh:/opt/airflow/script/entrypoint.sh
+  #   healthcheck:
+  #     test: ['CMD-SHELL', "[ -f /opt/airflow/airflow-webserver.pid ]"]
+  #     interval: 30s
+  #     timeout: 30s
+  #     retries: 3
+  #   networks:
+  #     - dev_meka
 
-  postgres:
-    image: postgres:latest
-    container_name: postgres
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: users
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # postgres:
+  #   image: postgres:latest
+  #   container_name: postgres
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: users
+  #   healthcheck:
+  #     test: ["CMD", "pg_isready", "-U", "postgres"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
     
 
 networks:
