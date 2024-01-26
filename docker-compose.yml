@@ -98,10 +98,10 @@ services:
     networks:
       - dev_meka
 
-webserver:
+  webserver:
     image: apache/airflow:2.6.0-python3.9
     command: webserver
-    entrypoint: []
+    entrypoint: ['/opt/airflow/scripts/entrypoint.sh']
     depends_on:
       - postgres
     ports:
@@ -115,9 +115,10 @@ webserver:
       options:
         max-size: 10m
         max-file: "3"
+    # Setup DAGS path & path to script for initializing the webserver
     volumes:
       - ./dags:'opt/airflow/dags'
-      #-
+      - ./script/entrypoint.sh:/opt/airflow/scripts/entrypoint.sh
     healthcheck:
       test: ['CMD-SHELL', "[ -f /opt/airflow/airflow-webserver.pid ]"]
       interval: 30s
@@ -125,6 +126,21 @@ webserver:
       retries: 3
     networks:
       - dev_meka
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: users
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     
 
 networks:
