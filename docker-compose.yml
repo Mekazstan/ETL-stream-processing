@@ -31,6 +31,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS: 10000
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
@@ -73,8 +74,8 @@ services:
       - dev_meka
     healthcheck:
       test: ['CMD', 'curl', '-f', 'https://localhost:8081']
-      interval: 30s
-      timeout: 10s
+      interval: 15s
+      timeout: 7s
       retries: 5
 
   control-center:
@@ -98,49 +99,65 @@ services:
     networks:
       - dev_meka
 
-  # webserver:
-  #   image: apache/airflow:2.6.0-python3.9
-  #   command: webserver
-  #   entrypoint: ['/opt/airflow/script/entrypoint.sh']
-  #   depends_on:
-  #     - postgres
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     - LOAD_EX=n
-  #     - EXECUTOR=Sequential
-  #     - AIRFLOW_DATABASE_SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-  #     - AIRFLOW_WEBSERVER_SECRET_KEY=this_is_a_very_secured_key
-  #   logging:
-  #     options:
-  #       max-size: 10m
-  #       max-file: "3"
-  #   # Setup DAGS path & path to script for initializing the webserver
-  #   volumes:
-  #     - ./dags:'opt/airflow/dags'
-  #     - ./script/entrypoint.sh:/opt/airflow/script/entrypoint.sh
-  #   healthcheck:
-  #     test: ['CMD-SHELL', "[ -f /opt/airflow/airflow-webserver.pid ]"]
-  #     interval: 30s
-  #     timeout: 30s
-  #     retries: 3
-  #   networks:
-  #     - dev_meka
+  webserver:
+    image: apache/airflow:2.6.0-python3.9
+    command: webserver
+    entrypoint: ['/opt/airflow/script/entrypoint.sh']
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      - LOAD_EX=n
+      - EXECUTOR=Sequential
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW_WEBSERVER_SECRET_KEY=this_is_a_very_secured_key
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    # Setup DAGS path & path to script for initializing the webserver
+    volumes:
+      - ./dags:'opt/airflow/dags'
+      - ./script/entrypoint.sh:/opt/airflow/script/entrypoint.sh
+    healthcheck:
+      test: ['CMD-SHELL', "[ -f /opt/airflow/airflow-webserver.pid ]"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+      - dev_meka
 
-  # postgres:
-  #   image: postgres:latest
-  #   container_name: postgres
-  #   ports:
-  #     - "5432:5432"
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: postgres
-  #     POSTGRES_DB: users
-  #   healthcheck:
-  #     test: ["CMD", "pg_isready", "-U", "postgres"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
+  scheduler:
+    image: apache/airflow:2.6.0-python3.9
+    depends_on:
+      webserver:
+        condition: service_healthy
+    volumes:
+      - ./dags:'opt/airflow/dags'
+      - ./requirements.txt:/opt/airflow/requirements.txt
+    environment:
+      - LOAD_EX=n
+      - EXECUTOR=Sequential
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW_WEBSERVER_SECRET_KEY=this_is_a_very_secured_key
+    # Can use the command format below or the script folder format as done in the webserver
+    command: bash -c "pip install -r ./requirements.txt && airflow db upgrade && airflow scheduler"
+    networks:
+      - dev_meka
+
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - dev_meka
     
 
 networks:
