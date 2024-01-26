@@ -101,7 +101,7 @@ services:
   webserver:
     image: apache/airflow:2.6.0-python3.9
     command: webserver
-    entrypoint: ['/opt/airflow/scripts/entrypoint.sh']
+    entrypoint: ['/opt/airflow/script/entrypoint.sh']
     depends_on:
       - postgres
     ports:
@@ -118,7 +118,7 @@ services:
     # Setup DAGS path & path to script for initializing the webserver
     volumes:
       - ./dags:'opt/airflow/dags'
-      - ./script/entrypoint.sh:/opt/airflow/scripts/entrypoint.sh
+      - ./script/entrypoint.sh:/opt/airflow/script/entrypoint.sh
     healthcheck:
       test: ['CMD-SHELL', "[ -f /opt/airflow/airflow-webserver.pid ]"]
       interval: 30s
